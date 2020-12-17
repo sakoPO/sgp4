@@ -65,10 +65,11 @@ char typerun, typeinput, opsmode;
 gravconsttype  whichconst;
 int whichcon;
 
+#define strcpy_s strcpy
+#define scanf_s scanf
+#define strncpy_s strncpy
 
-int _tmain(int argc, _TCHAR* argv[])
-//int main(array<System::String ^> ^args)
-//int main()
+int main(int argc, char* argv[])
 {
 
 	char str[2];
@@ -76,7 +77,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	double ro[3];
 	double vo[3];
 	FILE *infile, *outfile, *outfilee; 
-	errno_t err;
+	
 
 	// ----------------------------  locals  -------------------------------
 	double p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper;
@@ -162,7 +163,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	printf("input elset filename: \n");
 	//scanf_s("%s", infilename, sizeof(infilename));
 	std::cin >> infilename;
-	err = fopen_s(&infile, infilename, "r");
+	infile = fopen(infilename, "r");
 	if (infile == NULL)
 	{
 		printf("Failed to open file: %s\n", infilename);
@@ -170,16 +171,16 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	if (typerun == 'c')
-		err = fopen_s(&outfile, "tcppall.out", "w");
+		outfile = fopen("tcppall.out", "w");
 	else
 	{
 		if (typerun == 'v')
-			err = fopen_s(&outfile, "tcppver.out", "w");
+			outfile = fopen("tcppver.out", "w");
 		else
-			err = fopen_s(&outfile, "tcpp.out", "w");
+			outfile = fopen("tcpp.out", "w");
 	}
 
-	fopen_s(&dbgfile, "sgp4test.dbg", "w");
+	dbgfile = fopen("sgp4test.dbg", "w");
 	fprintf(dbgfile, "this is the debug output\n\n");
 
 	// ----------------- test simple propagation -------------------
@@ -207,8 +208,8 @@ int _tmain(int argc, _TCHAR* argv[])
 			// includes initialization of sgp4 and jd, jdfrac and sgp4init
 			SGP4Funcs::twoline2rv(longstr1, longstr2, typerun, typeinput, opsmode, whichconst,
 				startmfe, stopmfe, deltamin, satrec);
-			fprintf(outfile, "%s xx\n", satrec.satnum);
-			printf(" %s\n", satrec.satnum);
+			fprintf(outfile, "%li xx\n", satrec.satnum);
+			printf(" %li\n", satrec.satnum);
 			// call the propagator to get the initial state vector value
 			// no longer need gravconst since it is assigned in sgp4init
 			SGP4Funcs::sgp4(satrec, 0.0, ro, vo);
@@ -221,7 +222,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			outname[6] = 'e';
 			outname[7] = '\0';
 			SGP4Funcs::invjday(jd, jdFrac, year, mon, day, hr, min, sec);
-			err = fopen_s(&outfilee, outname, "w");
+			outfilee = fopen(outname, "w");
 			fprintf(outfilee, "stk.v.4.3 \n"); // must use 4.3...
 			fprintf(outfilee, "\n");
 			fprintf(outfilee, "BEGIN Ephemeris \n");
@@ -300,7 +301,7 @@ int _tmain(int argc, _TCHAR* argv[])
 						fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f",   // \n
 							tsince, ro[0], ro[1], ro[2], vo[0], vo[1], vo[2]);
 
-						SGP4Funcs::rv2coe(ro, vo, satrec.mus, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper);
+						SGP4Funcs::rv2coe(ro, vo, satrec.mu, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper);
 						fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f %5i%3i%3i %2i:%2i:%9.6f\n",
 							a, ecc, incl*rad, node*rad, argp*rad, nu*rad,
 							m*rad, year, mon, day, hr, min, sec);
@@ -328,7 +329,7 @@ int _tmain(int argc, _TCHAR* argv[])
 #ifdef _MSC_VER
 	strcpy_s(satrec.satnum, sizeof(satrec.satnum), "8195");
 #else
-	strcpy(satrec.satnum, "8195");
+	satrec.satnum = 8195;
 #endif
 
 	satrec.jdsatepoch = 2453911.0;
