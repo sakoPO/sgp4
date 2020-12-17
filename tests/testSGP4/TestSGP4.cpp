@@ -65,18 +65,18 @@ char typerun, typeinput, opsmode;
 gravconsttype  whichconst;
 int whichcon;
 
+#define strcpy_s strcpy
+#define scanf_s scanf
+#define strncpy_s strncpy
 
-int _tmain(int argc, _TCHAR* argv[])
-//int main(array<System::String ^> ^args)
-//int main()
+int main(int argc, char* argv[])
 {
 
 	char str[2];
 	char infilename[75];
 	double ro[3];
 	double vo[3];
-	FILE *infile, *outfile, *outfilee; 
-	errno_t err;
+	FILE *infile, *outfile, *outfilee; 	
 
 	// ----------------------------  locals  -------------------------------
 	double p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper;
@@ -114,10 +114,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	sec = 16.0;
 	jd;
 	jdFrac;
-	SGP4Funcs::jday(year, mon, day, hr, minute, sec, jd, jdFrac);
+	SGP4Funcs::jday_SGP4(year, mon, day, hr, minute, sec, jd, jdFrac);
 
 	double total = jd + jdFrac;
-	SGP4Funcs::invjday(total, 0.0, year, mon, day, hr, minute, sec);
+	SGP4Funcs::invjday_SGP4(total, 0.0, year, mon, day, hr, minute, sec);
 
 
 
@@ -162,7 +162,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	printf("input elset filename: \n");
 	//scanf_s("%s", infilename, sizeof(infilename));
 	std::cin >> infilename;
-	err = fopen_s(&infile, infilename, "r");
+	infile = fopen(infilename, "r");
 	if (infile == NULL)
 	{
 		printf("Failed to open file: %s\n", infilename);
@@ -170,16 +170,16 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	if (typerun == 'c')
-		err = fopen_s(&outfile, "tcppall.out", "w");
+		outfile = fopen("tcppall.out", "w");
 	else
 	{
 		if (typerun == 'v')
-			err = fopen_s(&outfile, "tcppver.out", "w");
+			outfile = fopen("tcppver.out", "w");
 		else
-			err = fopen_s(&outfile, "tcpp.out", "w");
+			outfile = fopen("tcpp.out", "w");
 	}
 
-	fopen_s(&dbgfile, "sgp4test.dbg", "w");
+	dbgfile = fopen("sgp4test.dbg", "w");
 	fprintf(dbgfile, "this is the debug output\n\n");
 
 	// ----------------- test simple propagation -------------------
@@ -220,8 +220,8 @@ int _tmain(int argc, _TCHAR* argv[])
 			outname[5] = '.';
 			outname[6] = 'e';
 			outname[7] = '\0';
-			SGP4Funcs::invjday(jd, jdFrac, year, mon, day, hr, min, sec);
-			err = fopen_s(&outfilee, outname, "w");
+			SGP4Funcs::invjday_SGP4(jd, jdFrac, year, mon, day, hr, min, sec);
+			outfilee = fopen(outname, "w");
 			fprintf(outfilee, "stk.v.4.3 \n"); // must use 4.3...
 			fprintf(outfilee, "\n");
 			fprintf(outfilee, "BEGIN Ephemeris \n");
@@ -275,7 +275,7 @@ int _tmain(int argc, _TCHAR* argv[])
 							jd = jd - 1.0;
 							jdFrac = jdFrac + 1.0;
 						}
-						SGP4Funcs::invjday(jd, jdFrac, year, mon, day, hr, min, sec);
+						SGP4Funcs::invjday_SGP4(jd, jdFrac, year, mon, day, hr, min, sec);
 
 						fprintf(outfile,
 							" %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f %5i%3i%3i %2i:%2i:%9.6f\n",
@@ -292,7 +292,7 @@ int _tmain(int argc, _TCHAR* argv[])
 							jd = jd - 1.0;
 							jdFrac = jdFrac + 1.0;
 						}
-						SGP4Funcs::invjday(jd, jdFrac, year, mon, day, hr, min, sec);
+						SGP4Funcs::invjday_SGP4(jd, jdFrac, year, mon, day, hr, min, sec);
 
 						fprintf(outfilee, " %16.6f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f \n",
 							tsince*60.0, ro[0], ro[1], ro[2], vo[0], vo[1], vo[2]);
@@ -300,7 +300,7 @@ int _tmain(int argc, _TCHAR* argv[])
 						fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f",   // \n
 							tsince, ro[0], ro[1], ro[2], vo[0], vo[1], vo[2]);
 
-						SGP4Funcs::rv2coe(ro, vo, satrec.mus, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper);
+						SGP4Funcs::rv2coe_SGP4(ro, vo, satrec.mus, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper);
 						fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f %5i%3i%3i %2i:%2i:%9.6f\n",
 							a, ecc, incl*rad, node*rad, argp*rad, nu*rad,
 							m*rad, year, mon, day, hr, min, sec);
@@ -383,7 +383,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			jd = jd - 1.0;
 			jdFrac = jdFrac - 1.0;
 		}
-		SGP4Funcs::invjday(jd, jdFrac, year, mon, day, hr, min, sec);
+		SGP4Funcs::invjday_SGP4(jd, jdFrac, year, mon, day, hr, min, sec);
 
 		fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f",
 			tsince, ro[0], ro[1], ro[2], vo[0], vo[1], vo[2]);
